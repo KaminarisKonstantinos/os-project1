@@ -5,6 +5,10 @@
 #include <math.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <time.h>
 
 double get_wtime(void) {
   struct timeval t;
@@ -25,35 +29,52 @@ int main(int argc, char *argv[]) {
   double b = 1.0;
   int n_proc = 1;
   unsigned long n = 24e7;  // or e8
-  const double h = (b-a)/n;
   const double ref = 0.73864299803689018;
-  const long tseed = 10;
   double res = 0;
   double t0, t1;
   pid_t pid;
 
-  if (argc == 2) {
+  if (argc == 2 && atoi(argv[1]) != 0) {
     n_proc = atoi(argv[1]);
+    n = n / n_proc;
   }
 
-  srand48(tseed);
+  double *ptr = mmap(NULL, n_proc * sizeof(double*), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0); 
 
   t0 = get_wtime();
 
-  for (int j=0; j<n_proc; j++) {
+  for (int i=0; i<n_proc; i++) {
       pid = fork();
-      printf("Fork output: %d Pid: %d\n", pid, getpid());
+      switch (pid) {
+          case -1:
+              perror("fork");
+              exit(EXIT_FAILURE);
+          case 0:
+              srand(i);
+              *(ptr + i) = 0;
+              for (unsigned long j = 0; j < n; j++) {
+                  double xi;
+                  xi = drand48();
+                  *(ptr + i) += f(xi);
+              }
+              exit(EXIT_SUCCESS);
+          default:
+              break;
+      }
   }
 
-  for (unsigned long i = 0; i < n; i++) {
-    double xi;
-    xi = drand48();
-    res += f(xi);
+  for (int i=0; i<n_proc; i++) {
+      wait(NULL);
   }
-  res *= h;
+
   t1 = get_wtime();
 
-  printf("Result=%.16f Error=%e Rel.Error=%e Time=%lf seconds\n",
-         res, fabs(res-ref), fabs(res-ref)/ref, t1-t0);
+  for (int i=0; i<n_proc; i++) {
+      res += *(ptr+i);
+  }
+
+  res *= (b-a)/(n*n_proc);
+
+  printf("Result=%.16f Error=%e Rel.Error=%e Time=%lf seconds\n", res, fabs(res-ref), fabs(res-ref)/ref, t1-t0);
   return 0;
 }
