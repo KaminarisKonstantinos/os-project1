@@ -51,12 +51,13 @@ int main(int argc, char *argv[]) {
               exit(EXIT_FAILURE);
           case 0:
               srand48(time(NULL) + i);
-              *(ptr + i) = 0;
+              double partial_res = 0;
               for (unsigned long j = 0; j < n; j++) {
                   double xi;
                   xi = drand48();
-                  *(ptr + i) += f(xi);
+                  partial_res += f(xi);
               }
+              *(ptr + i) = partial_res;
               exit(EXIT_SUCCESS);
           default:
               break;
