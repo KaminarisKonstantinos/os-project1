@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <pthread.h>
 
 double get_wtime(void) {
   struct timeval t;
@@ -32,14 +33,28 @@ int main(int argc, char *argv[]) {
   const double ref = 0.73864299803689018;
   double res = 0;
   double t0, t1;
-  pid_t pid;
+  pid_t pid;   
+
+  typedef struct
+  {
+      double value;
+      pthread_mutex_t mutex;
+  } shared_data;
 
   if (argc == 2 && atoi(argv[1]) != 0) {
     n_proc = atoi(argv[1]);
     n = n / n_proc;
   }
 
-  double *ptr = mmap(NULL, n_proc * sizeof(double*), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0); 
+  static shared_data* ptr = NULL;
+
+  ptr = mmap(NULL, sizeof(shared_data), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0); 
+  ptr->value = 0;
+
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+  pthread_mutex_init(&ptr->mutex, &attr);
 
   t0 = get_wtime();
 
@@ -51,12 +66,16 @@ int main(int argc, char *argv[]) {
               exit(EXIT_FAILURE);
           case 0:
               srand48(time(NULL) + i);
-              *(ptr + i) = 0;
+              double partial_res = 0;
               for (unsigned long j = 0; j < n; j++) {
                   double xi;
                   xi = drand48();
-                  *(ptr + i) += f(xi);
+                  partial_res += f(xi);
               }
+              // critical region protected
+              pthread_mutex_lock(&ptr->mutex);
+              ptr->value += partial_res;
+              pthread_mutex_unlock(&ptr->mutex);
               exit(EXIT_SUCCESS);
           default:
               break;
@@ -69,12 +88,9 @@ int main(int argc, char *argv[]) {
 
   t1 = get_wtime();
 
-  for (int i=0; i<n_proc; i++) {
-      res += *(ptr+i);
-  }
+  res = ptr->value;
 
-
-  munmap(ptr, n_proc * sizeof(double*));
+  munmap(ptr, sizeof(ptr));
 
   res *= (b-a)/(n*n_proc);
 
