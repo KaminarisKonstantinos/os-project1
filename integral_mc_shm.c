@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
               perror("fork");
               exit(EXIT_FAILURE);
           case 0:
-              srand(i);
+              srand48(time(NULL) + i);
               *(ptr + i) = 0;
               for (unsigned long j = 0; j < n; j++) {
                   double xi;
@@ -72,6 +72,9 @@ int main(int argc, char *argv[]) {
   for (int i=0; i<n_proc; i++) {
       res += *(ptr+i);
   }
+
+
+  munmap(ptr, n_proc * sizeof(double*));
 
   res *= (b-a)/(n*n_proc);
 
