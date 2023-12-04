@@ -97,3 +97,4 @@ int main(int argc, char *argv[]) {
   printf("Result=%.16f Error=%e Rel.Error=%e Time=%lf seconds\n", res, fabs(res-ref), fabs(res-ref)/ref, t1-t0);
   return 0;
 }
+//ok :D
