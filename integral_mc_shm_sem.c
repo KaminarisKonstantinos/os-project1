@@ -35,36 +35,47 @@ int main(int argc, char *argv[]) {
   double t0, t1;
   pid_t pid;   
 
+  // shared memory type
   typedef struct
   {
       double value;
       pthread_mutex_t mutex;
   } shared_data;
 
+  // dynamically change number of processes according to call argument
   if (argc == 2 && atoi(argv[1]) != 0) {
     n_proc = atoi(argv[1]);
     n = n / n_proc;
   }
 
+  // initiate pointer for shared data
   static shared_data* ptr = NULL;
 
+  // allocate memory that is shared between processes
+  // all processes use the same memory adress so conflicts can occur
   ptr = mmap(NULL, sizeof(shared_data), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0); 
   ptr->value = 0;
 
+  // initiate mutex so that it can be correctly shared between processes
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
   pthread_mutex_init(&ptr->mutex, &attr);
 
+  // start timer
   t0 = get_wtime();
 
   for (int i=0; i<n_proc; i++) {
+      // calculation will be handled by the children processes, while parent waits to get the answer
       pid = fork();
       switch (pid) {
+          // fork gone wrong
           case -1:
               perror("fork");
               exit(EXIT_FAILURE);
+          // child process
           case 0:
+              // each process uses a different seed for the random number generator
               srand48(time(NULL) + i);
               double partial_res = 0;
               for (unsigned long j = 0; j < n; j++) {
@@ -72,6 +83,7 @@ int main(int argc, char *argv[]) {
                   xi = drand48();
                   partial_res += f(xi);
               }
+              // write on shared memory
               // critical region protected
               pthread_mutex_lock(&ptr->mutex);
               ptr->value += partial_res;
@@ -82,14 +94,17 @@ int main(int argc, char *argv[]) {
       }
   }
 
+  // parent waits for children to exit
   for (int i=0; i<n_proc; i++) {
       wait(NULL);
   }
 
+  // end timer
   t1 = get_wtime();
 
   res = ptr->value;
 
+  // free allocated shared memory
   munmap(ptr, sizeof(ptr));
 
   res *= (b-a)/(n*n_proc);

@@ -34,22 +34,30 @@ int main(int argc, char *argv[]) {
   double t0, t1;
   pid_t pid;
 
+  // dynamically change the number of processes according to call argument
   if (argc == 2 && atoi(argv[1]) != 0) {
     n_proc = atoi(argv[1]);
     n = n / n_proc;
   }
 
+  // allocate memory that is shared between processes
+  // each process has its own memory adress so no conflics can occur
   double *ptr = mmap(NULL, n_proc * sizeof(double*), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0); 
 
+  // start timer
   t0 = get_wtime();
 
   for (int i=0; i<n_proc; i++) {
+      // calculation will be handled by the children processes, while parent waits to get the answer
       pid = fork();
       switch (pid) {
+          // fork gone wrong
           case -1:
               perror("fork");
               exit(EXIT_FAILURE);
+          // child process
           case 0:
+              // each process uses a different seed for the random number generator
               srand48(time(NULL) + i);
               double partial_res = 0;
               for (unsigned long j = 0; j < n; j++) {
@@ -57,6 +65,7 @@ int main(int argc, char *argv[]) {
                   xi = drand48();
                   partial_res += f(xi);
               }
+              // write on shared memory
               *(ptr + i) = partial_res;
               exit(EXIT_SUCCESS);
           default:
@@ -64,17 +73,20 @@ int main(int argc, char *argv[]) {
       }
   }
 
+  // parent waits for children to exit
   for (int i=0; i<n_proc; i++) {
       wait(NULL);
   }
 
-  t1 = get_wtime();
-
+  // add up the partial sums
   for (int i=0; i<n_proc; i++) {
       res += *(ptr+i);
   }
 
+  // end timer
+  t1 = get_wtime();
 
+  // free allocated shared memory
   munmap(ptr, n_proc * sizeof(double*));
 
   res *= (b-a)/(n*n_proc);
