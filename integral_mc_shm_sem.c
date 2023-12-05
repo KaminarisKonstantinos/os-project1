@@ -1,3 +1,7 @@
+//###############################################################
+// 236064 1041756 Kaminaris Konstantinos
+//###############################################################
+
 // integral_mc_seq.c: Monte Carlo integration - sequential code
 // https://en.wikipedia.org/wiki/Monte_Carlo_integration
 #include <stdio.h>
