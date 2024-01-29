@@ -21,10 +21,10 @@ This project is designed to leverage shared memory and semaphores for efficient 
 ## Performance Testing with Varying Numbers of CPU Cores
 
 <p align="center">
-<img align="center" alt="chebotko" width="50%" src="./images/shm.png?raw=true" />
+<img align="center" alt="chebotko" width="80%" src="./images/shm.png?raw=true" />
 </p>
 <p align="center">
-<img align="center" alt="chebotko" width="50%" src="./images/shm_sem.png?raw=true" />
+<img align="center" alt="chebotko" width="80%" src="./images/shm_sem.png?raw=true" />
 </p>
 
 > Note: The tests were conducted on a 4-core CPU, and as a result, performance does not improve when attempting to utilize more than 4 processes.
