@@ -10,3 +10,18 @@ This project is designed to leverage shared memory and semaphores for efficient 
 
 - **Load Balancing:** Computational tasks, in this case, the Monte Carlo integration of `sin(cos(x))`, are divided among multiple CPU cores, promoting parallel processing and optimizing overall performance.
 
+## Files
+
+- **integral_mc_seq.c:** The initial implementation of Monte Carlo integration without parallel processing.
+
+- **integral_mc_shm.c:** In this version, each process-child writes to its dedicated memory address. After completing their calculations, the process-parent aggregates the results to determine the final outcome.
+
+- **integral_mc_shm_sem.c:** This version employs shared memory, with each process-child writing to the same memory address. To ensure proper coordination and prevent conflicts, a semaphore is used to synchronize access between processes.
+
+## Documentation in Greek
+
+For detailed information in Greek, refer to the following documents:
+
+- **Original Assignment:** Find the original project assignment in Greek within Part 2 of the `Project1-OS-2023-2024_final.pdf` file.
+
+- **Project Report:** Access my detailed report, written in Greek, in Part 2 of the `OS-Report1.pdf` file.
