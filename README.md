@@ -1,4 +1,4 @@
-# Operating Systems University Project #1
+# Parallel Monte Carlo Integration using Shared Memory and Semaphores - OS University Project #1
 
 This project is designed to leverage shared memory and semaphores for efficient workload distribution across multiple CPU cores. The main objective is to demonstrate a simple yet effective way to parallelize computations, specifically the Monte Carlo integration of the function `sin(cos(x))` over the interval [0,1]. 
 
