@@ -33,6 +33,6 @@ This project is designed to leverage shared memory and semaphores for efficient 
 
 For detailed information in Greek, refer to the following documents:
 
-- **Original Assignment:** Find the original project assignment in Greek within Part 2 of the `Project1-OS-2023-2024_final.pdf` file.
+- **Original Assignment:** Find the original project assignment in Greek within Part 2 of the [`Project1-OS-2023-2024_final.pdf`](Project1-OS-2023-2024_final.pdf) file.
 
-- **Project Report:** Access my detailed report, written in Greek, in Part 2 of the `OS-Report1.pdf` file.
+- **Project Report:** Access my detailed report, written in Greek, in Part 2 of the [`OS-Report1.pdf`](OS-Report1.pdf) file.
